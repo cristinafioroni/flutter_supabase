@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/supabase_client.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_supabase/core/supabase_client.dart';
 
 void main() async {
   // Assicura che i binding di Flutter siano inizializzati prima di eseguire altre operazioni asincrone
