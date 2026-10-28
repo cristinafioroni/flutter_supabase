@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+
 import 'auth/login_view.dart';
 import '../viewmodel/auth_view_model.dart';
 import 'package:provider/provider.dart';
 import 'auth/register_view.dart';
 
+// Import della BottomNavBar
+import 'widget/bottom_nav_bar.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -14,38 +17,32 @@ class HomeView extends StatelessWidget {
       appBar: AppBar(
         title: Text('SupabaseApp'),
         actions: [
-          IconButton(onPressed: () async {
-            final vm = Provider.of<AuthViewModel>(context, listen: false);
-            await vm.logout();
-            if (context.mounted) {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginView()));
-            }
-          }, icon: Icon(Icons.logout))
-        ]
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+          IconButton(
+            onPressed: () async {
+              final vm = Provider.of<AuthViewModel>(context, listen: false);
+              await vm.logout();
 
-        children: [
-          // Image.asset(
-          //   'assets/logo.png',
-          //   height: 100,
-          // ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
+              if (context.mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginView()),
+                );
+              }
             },
-            child: Text('Login'),
+            icon: Icon(Icons.logout),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterView()));
-            },
-            child: Text('Non hai un account? Registrati'),
-          )
         ],
       ),
+
+      body: Center(
+        child: Text(
+          'Benvenuto nella Home!',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 24),
+        ),
+      ),
+
+      bottomNavigationBar: BottomNavBar(currentIndex: 0),
     );
   }
 }

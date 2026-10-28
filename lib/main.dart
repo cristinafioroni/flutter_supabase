@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_supabase/views/home_view.dart';
 import 'package:flutter_supabase/views/auth/login_view.dart';
 import 'package:provider/provider.dart';
-
+import 'package:flutter_supabase/views/home_view.dart';
+import 'package:flutter_supabase/views/user_profile_view.dart';
 import 'viewmodel/auth_view_model.dart';
+import 'viewmodel/profile_view_model.dart';
 import 'core/supabase_client.dart';
 
 void main() async {
@@ -20,8 +21,12 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthViewModel(),
+    // Utilizzo di MultiProvider per fornire più ChangeNotifier
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => ProfileViewModel())
+      ],
       child: Consumer<AuthViewModel>(
         builder: (context, auth, _) {
           return MaterialApp(

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../home_view.dart';
 
 import '../../viewmodel/auth_view_model.dart';
 import 'register_view.dart';
-import '../home_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
