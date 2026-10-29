@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -20,16 +22,19 @@ class ProfileViewModel extends ChangeNotifier {
     } catch (e) {
       // Gestione degli errori
       print('Errore durante il caricamento del profilo: $e');
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
-
-    isLoading = false;
-    notifyListeners();
   }
 
   Future<void> createUserProfile(UserProfile updatedProfile) async {
     final id = _client.auth.currentUser?.id;
 
-    if (id == null) return;
+    if (id == null) {
+      throw Exception('Utente non autenticato');
+    }
 
     final newProfile = UserProfile(
       id: id,
@@ -45,15 +50,16 @@ class ProfileViewModel extends ChangeNotifier {
     } catch (e) {
       // Gestione degli errori
       print('Errore durante la creazione del profilo: $e');
+      rethrow;
     }
-
-    notifyListeners();
   }
 
   Future<void> updateUserProfile(UserProfile updatedProfile) async {
     final id = _client.auth.currentUser?.id;
 
-    if (id == null) return;
+    if (id == null) {
+      throw Exception('Utente non autenticato');
+    }
 
     try {
       await _profileService.updateUserProfile(updatedProfile);
@@ -62,8 +68,17 @@ class ProfileViewModel extends ChangeNotifier {
     } catch (e) {
       // Gestione degli errori
       print('Errore durante l\'aggiornamento del profilo: $e');
+      rethrow;
     }
+  }
 
-    notifyListeners();
+  // metodo per caricare l'immagine del profilo
+  Future<String> uploadProfileImage(File imageFile) async {
+    try {
+      return await _profileService.uploadProfileImage(imageFile);
+    } catch (e) {
+      print('Errore durante il caricamento dell\'immagine: $e');
+      rethrow;
+    }
   }
 }

@@ -1,5 +1,7 @@
 import '../models/user_profile.dart';
 
+import 'dart:io';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileService {
@@ -12,7 +14,11 @@ class ProfileService {
       return null;
     }
     //* query al database per recuperare i dati del profilo utente
-    final response = await _client.from('profiles').select().eq('id', userId).single();
+    final response = await _client
+        .from('profiles')
+        .select()
+        .eq('id', userId)
+        .single();
 
     return UserProfile.fromMap(response);
   }
@@ -27,6 +33,27 @@ class ProfileService {
     await _client.from('profiles').update(profile.toMap()).eq('id', profile.id);
   }
 
-    
-}
+  //* metodo per caricare l'immagine del profilo utente
+  Future<String> uploadProfileImage(File imageFile) async {
+    final userId = _client.auth.currentUser!.id;
 
+    final path = 'avatars/$userId/avatar.jpg';
+
+    // carica l'immagine nel bucket media
+    await _client.storage
+        .from('media')
+        .upload(
+          path,
+          imageFile,
+          fileOptions: const FileOptions(
+            upsert: true,
+            contentType: 'image/jpeg',
+          ),
+        );
+
+    // recupera l'URL pubblico dell'immagine
+    final imageUrl = _client.storage.from('media').getPublicUrl(path);
+
+    return imageUrl;
+  }
+}

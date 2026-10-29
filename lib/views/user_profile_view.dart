@@ -8,8 +8,6 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/user_profile.dart';
-import '../viewmodel/auth_view_model.dart';
-import 'auth/login_view.dart';
 import 'widget/bottom_nav_bar.dart';
 
 class UserProfileView extends StatefulWidget {
@@ -24,6 +22,7 @@ class _UserProfileViewState extends State<UserProfileView> {
   final _usernameController = TextEditingController();
   DateTime? _selectedDate;
   File? _selectedFile;
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -51,7 +50,7 @@ class _UserProfileViewState extends State<UserProfileView> {
   }
 
   Future<void> _pickImageFromGallery() async {
-    final picker = await ImagePicker();
+    final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 80,
@@ -84,13 +83,15 @@ class _UserProfileViewState extends State<UserProfileView> {
                         onTap: _pickImageFromGallery,
                         child: CircleAvatar(
                           radius: 50,
-                          backgroundImage: _selectedFile != null ? FileImage (_selectedFile!)
-                              : profile?.avatarUrl != null
-                                  ? NetworkImage(profile!.avatarUrl!)
+                          backgroundImage: _selectedFile != null
+                              ? FileImage(_selectedFile!)
+                              : profile?.avatarUrl != null &&
+                                      profile!.avatarUrl!.isNotEmpty
+                                  ? NetworkImage(profile.avatarUrl!)
                                   : const AssetImage(
                                       'assets/avatar_placeholder.png',
                                     ) as ImageProvider,
-                          child: _selectedFile == null
+                          child: _selectedFile != null
                               ? const Icon(Icons.person, size: 50)
                               : null,
                         ),
@@ -135,45 +136,83 @@ class _UserProfileViewState extends State<UserProfileView> {
                     ),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.save),
-                      label: const Text('Salva'),
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate() &&
-                            _selectedDate != null) {
-                          final username = _usernameController.text.trim();
-                          if (profile == null) {
-                            //* crea profilo se non esiste
-                            await profileVM.createUserProfile(
-                              UserProfile(
-                                id: '',
-                                name: username,
-                                birthDate: _selectedDate!,
-                              ),
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Profilo creato con successo'),
-                              ),
-                            );
-                          } else {
-                            //* aggiorna profilo se esiste
+                      label: Text(_isSaving ? 'Salvataggio...' : 'Salva'),
+                      onPressed: _isSaving
+                          ? null
+                          : () async {
+                              if (!_formKey.currentState!.validate()) return;
 
-                            final updated = UserProfile(
-                              id: profile!.id,
-                              name: username,
-                              birthDate: _selectedDate!,
-                              avatarUrl: profile.avatarUrl,
-                            );
-                            await profileVM.updateUserProfile(updated);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Profilo aggiornato con successo',
-                                ),
-                              ),
-                            );
-                          }
-                        }
-                      },
+                              if (_selectedDate == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Seleziona la tua data di nascita',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              final scaffoldMessenger = ScaffoldMessenger.of(
+                                context,
+                              );
+                              setState(() {
+                                _isSaving = true;
+                              });
+
+                              try {
+                                final avatarUrl = _selectedFile != null
+                                    ? await profileVM.uploadProfileImage(
+                                        _selectedFile!,
+                                      )
+                                    : profile?.avatarUrl;
+                                final updatedProfile = UserProfile(
+                                  id: profile?.id ?? '',
+                                  name: _usernameController.text.trim(),
+                                  birthDate: _selectedDate!,
+                                  avatarUrl: avatarUrl,
+                                );
+
+                                if (profile == null) {
+                                  await profileVM.createUserProfile(
+                                    updatedProfile,
+                                  );
+                                } else {
+                                  await profileVM.updateUserProfile(
+                                    updatedProfile,
+                                  );
+                                }
+
+                                if (!mounted) return;
+                                setState(() {
+                                  _selectedFile = null;
+                                });
+                                scaffoldMessenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      profile == null
+                                          ? 'Profilo creato con successo'
+                                          : 'Profilo aggiornato con successo',
+                                    ),
+                                  ),
+                                );
+                              } catch (error) {
+                                if (!mounted) return;
+                                scaffoldMessenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Errore durante il salvataggio del profilo: $error',
+                                    ),
+                                  ),
+                                );
+                              } finally {
+                                if (mounted) {
+                                  setState(() {
+                                    _isSaving = false;
+                                  });
+                                }
+                              }
+                            },
                     ),
                   ],
                 ),
