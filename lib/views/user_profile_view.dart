@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_supabase/viewmodel/profile_view_model.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'widget/custom_app_bar.dart';
 
 import 'dart:io';
 
@@ -68,7 +69,7 @@ class _UserProfileViewState extends State<UserProfileView> {
     final profile = profileVM.profile;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('User Profile')),
+      appBar: const CustomAppBar(),
 
       body: profileVM.isLoading
           ? const Center(child: CircularProgressIndicator())

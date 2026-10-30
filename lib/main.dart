@@ -3,6 +3,7 @@ import 'package:flutter_supabase/views/auth/login_view.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_supabase/views/home_view.dart';
 import 'package:flutter_supabase/views/user_profile_view.dart';
+import 'package:flutter_supabase/views/welcome_view.dart';
 
 import 'viewmodel/auth_view_model.dart';
 import 'viewmodel/profile_view_model.dart';
@@ -37,7 +38,7 @@ class MyApp extends StatelessWidget {
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             ),
-            home: auth.session != null ? const HomeView() : const LoginView(),
+            home: auth.session != null ? const WelcomeView() : const LoginView(),
           );
         },
       ),

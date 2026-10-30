@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_supabase/views/user_profile_view.dart';
 import 'package:flutter_supabase/views/home_view.dart';
+import 'package:flutter_supabase/views/widget/add_book_view.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -36,12 +37,26 @@ class BottomNavBar extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.home),
-            color: currentIndex == 0 ? Colors.grey : const Color.fromARGB(255, 78, 19, 1),
+            color: currentIndex == 0
+                ? Colors.grey
+                : const Color.fromARGB(255, 78, 19, 1),
             onPressed: () => _onTap(context, 0),
           ),
           IconButton(
+            icon: const Icon(Icons.add),
+          
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AddBookView()),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.person),
-            color: currentIndex == 1 ? Colors.grey : const Color.fromARGB(255, 88, 0, 49),
+            color: currentIndex == 1
+                ? Colors.grey
+                : const Color.fromARGB(255, 88, 0, 49),
             onPressed: () => _onTap(context, 1),
           ),
         ],

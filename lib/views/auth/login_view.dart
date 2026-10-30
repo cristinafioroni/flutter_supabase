@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../../core/theme/app_color.dart';
 import '../home_view.dart';
+import '../widget/custom_app_bar.dart';
 
 import '../../viewmodel/auth_view_model.dart';
 import 'register_view.dart';
@@ -28,26 +31,26 @@ class _LoginViewState extends State<LoginView> {
     final vm = Provider.of<AuthViewModel>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const HomeView()),
-              );
-            },
-            icon: const Icon(Icons.home),
-          ),
-        ],
-      ),
+      appBar: const CustomAppBar(),
+      backgroundColor: AppColors.background,
+
       body: vm.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
               padding: const EdgeInsets.all(16.0),
+
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  const Text(
+                    'Login',
+                    style: TextStyle(
+                      fontFamily: 'HennyPenny',
+                      fontSize: 32,
+                      color: AppColors.gold,
+                    ),
+                  ),
                   TextField(
                     controller: emailController,
                     decoration: const InputDecoration(labelText: 'Email'),
@@ -59,6 +62,10 @@ class _LoginViewState extends State<LoginView> {
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 54, 19, 88),
+                      foregroundColor: AppColors.gold,
+                    ),
                     onPressed: () async {
                       await vm.login(
                         emailController.text,
