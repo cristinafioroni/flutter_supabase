@@ -1,8 +1,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_supabase/models/book_model.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../core/theme/app_color.dart';
+import '../../viewmodel/book_view_model.dart';
+
 import 'custom_app_bar.dart';
 import 'bottom_nav_bar.dart';
 
@@ -52,25 +57,68 @@ class _AddBookViewState extends State<AddBookView> {
     super.dispose();
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      // Logica per salvare il libro
-      final title = _titleController.text;
-      final author = _authorController.text;
-      final genre = _genreController.text;
-      final pages = int.tryParse(_pagesController.text);
-      final status = _selectedStatus;
-      final rating = _rating;
-      final comment = _commentController.text;
+  Future<void> _submitForm() async {
+    if (_formKey.currentState!.validate() && _selectedStatus != null) {
 
-      // Esempio di stampa dei dati
-      print('Titolo: $title');
-      print('Autore: $author');
-      print('Genere: $genre');
-      print('Pagine: $pages');
-      print('Stato: ${status?.toDbValue()}');
-      print('Valutazione: $rating');
-      print('Commento: $comment');
+      // Recupero l'ID dell'utente autenticato
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+
+      if (userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Utente non autenticato'),
+          ),
+        );
+        return;
+      }
+
+      // Logica per salvare il libro
+      final newBook = Book(
+        id: const Uuid().v4(),
+        userId: userId,
+        title: _titleController.text.trim(),
+        genre: _genreController.text.trim(),
+        author: _authorController.text.trim(),
+        pages: int.tryParse(_pagesController.text) ?? 0,
+        rating: _rating.toInt(),
+        comment: _commentController.text.trim(),
+        status: _selectedStatus!,
+        createdAt: DateTime.now(),
+      );
+
+      final messenger = ScaffoldMessenger.of(context);
+
+      try {
+        // Salvataggio del libro tramite BookViewModel
+        await Provider.of<BookViewModel>(
+          context,
+          listen: false,
+        ).addBook(newBook);
+
+        // Controllo che il widget sia ancora presente
+        if (!mounted) return;
+
+        // Messaggio di conferma
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Libro aggiunto con successo'),
+          ),
+        );
+
+        // Torno alla schermata precedente
+        Navigator.pop(context);
+
+      } catch (e) {
+        debugPrint("Errore durante l'aggiunta del libro: $e");
+
+        if (!mounted) return;
+
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text("Errore durante l'aggiunta del libro"),
+          ),
+        );
+      }
     }
   }
 
@@ -108,8 +156,8 @@ class _AddBookViewState extends State<AddBookView> {
                   ),
                   validator: (value) =>
                       value == null || value.trim().isEmpty
-                      ? 'campo obbligatorio'
-                      : null,
+                          ? 'campo obbligatorio'
+                          : null,
                 ),
 
                 const SizedBox(height: 16),
@@ -123,8 +171,8 @@ class _AddBookViewState extends State<AddBookView> {
                   ),
                   validator: (value) =>
                       value == null || value.trim().isEmpty
-                      ? 'campo obbligatorio'
-                      : null,
+                          ? 'campo obbligatorio'
+                          : null,
                 ),
 
                 const SizedBox(height: 16),
@@ -138,8 +186,8 @@ class _AddBookViewState extends State<AddBookView> {
                   ),
                   validator: (value) =>
                       value == null || value.trim().isEmpty
-                      ? 'campo obbligatorio'
-                      : null,
+                          ? 'campo obbligatorio'
+                          : null,
                 ),
 
                 const SizedBox(height: 16),
