@@ -6,6 +6,7 @@ import 'package:flutter_supabase/views/user_profile_view.dart';
 
 import 'viewmodel/auth_view_model.dart';
 import 'viewmodel/profile_view_model.dart';
+import 'viewmodel/book_view_model.dart';
 import 'core/supabase_client.dart';
 
 void main() async {
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+        ChangeNotifierProvider(create: (_) => BookViewModel()),
       ],
       child: Consumer<AuthViewModel>(
         builder: (context, auth, _) {
