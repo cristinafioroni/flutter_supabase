@@ -9,7 +9,7 @@ class BookImage {
     required this.imageUrl,
   });
 
-  factory BookImage.fromJson(Map<String, dynamic> json) {
+  factory BookImage.fromMap(Map<String, dynamic> json) {
     return BookImage(
       id: json['id'],
       bookId: json['book_id'],

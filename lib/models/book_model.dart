@@ -86,4 +86,17 @@ class Book {
       images: const [],
     );
   }
+  //* metodo per convertire un oggetto Book in una mappa per Supabase
+  Map<String, dynamic> toMap() {
+    return {
+      'user_id': userId,
+      'title': title,
+      'genre': genre,
+      'author': author,
+      'pages': pages,
+      'rating': rating,
+      'comment': comment,
+      'status': status.toDbValue(),
+    };
+  }
 }
