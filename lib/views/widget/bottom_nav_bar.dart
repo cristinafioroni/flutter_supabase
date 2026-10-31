@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_supabase/views/user_profile_view.dart';
 import 'package:flutter_supabase/views/home_view.dart';
 import 'package:flutter_supabase/views/widget/add_book_view.dart';
+import 'package:flutter_supabase/views/book_list_view.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -52,6 +53,20 @@ class BottomNavBar extends StatelessWidget {
               );
             },
           ),
+
+          //* book detail view button
+           IconButton(
+            icon: const Icon(Icons.book),
+          
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => BooksListView()),
+              );
+            },
+          ),
+
+          //* user profile view button
           IconButton(
             icon: const Icon(Icons.person),
             color: currentIndex == 1

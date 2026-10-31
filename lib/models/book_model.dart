@@ -72,6 +72,12 @@ class Book {
   });
 
   factory Book.fromMap(Map<String, dynamic> map) {
+    final images = (map['book_images'] as List<dynamic>? ?? [])
+        .map(
+          (image) => BookImage.fromMap(image as Map<String, dynamic>),
+        )
+        .toList();
+
     return Book(
       id: map['id'],
       userId: map['user_id'],
@@ -83,7 +89,7 @@ class Book {
       comment: map['comment'],
       status: BookStatus.fromDbValue(map['status']),
       createdAt: DateTime.parse(map['created_at']),
-      images: const [],
+      images: images,
     );
   }
   //* metodo per convertire un oggetto Book in una mappa per Supabase
