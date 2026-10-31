@@ -1,13 +1,17 @@
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_supabase/models/book_model.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'package:image_picker/image_picker.dart';
 
+import '../../models/book_image.dart';
 import '../../core/theme/app_color.dart';
 import '../../viewmodel/book_view_model.dart';
-
+import '../../core/storage_service.dart';
+import '../../core/book_image_service.dart';
 import 'custom_app_bar.dart';
 import 'bottom_nav_bar.dart';
 
@@ -46,6 +50,7 @@ class _AddBookViewState extends State<AddBookView> {
 
   // Valutazione iniziale del libro
   double _rating = 3.0;
+  List<File> _selectedImages = [];
 
   @override
   void dispose() {
@@ -59,16 +64,13 @@ class _AddBookViewState extends State<AddBookView> {
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate() && _selectedStatus != null) {
-
       // Recupero l'ID dell'utente autenticato
       final userId = Supabase.instance.client.auth.currentUser?.id;
 
       if (userId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Utente non autenticato'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Utente non autenticato')));
         return;
       }
 
@@ -95,31 +97,76 @@ class _AddBookViewState extends State<AddBookView> {
           listen: false,
         ).addBook(newBook);
 
+        // Controllo del libro appena salvato
+        final client = Supabase.instance.client;
+
+        debugPrint('UTENTE AUTENTICATO: ${client.auth.currentUser?.id}');
+        debugPrint('ID LIBRO: ${newBook.id}');
+
+        final booksFound = await client
+            .from('books')
+            .select('id, user_id')
+            .eq('id', newBook.id);
+
+        debugPrint('LIBRI VISIBILI: $booksFound');
+        debugPrint('NUMERO IMMAGINI: ${_selectedImages.length}');
+
+        // Caricamento delle immagini selezionate
+        if (_selectedImages.isNotEmpty) {
+          final storageService = StorageService();
+          final imageService = BookImageService();
+
+          for (final image in _selectedImages) {
+            final imageUrl = await storageService.uploadImage(
+              image,
+              newBook.id,
+            );
+
+            debugPrint('URL IMMAGINE: $imageUrl');
+
+            final bookImage = BookImage(
+              id: const Uuid().v4(),
+              bookId: newBook.id,
+              imageUrl: imageUrl,
+            );
+
+            await imageService.createBookImage(bookImage);
+
+            debugPrint('IMMAGINE SALVATA NEL DATABASE');
+          }
+        }
+
         // Controllo che il widget sia ancora presente
         if (!mounted) return;
 
         // Messaggio di conferma
         messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Libro aggiunto con successo'),
-          ),
+          const SnackBar(content: Text('Libro aggiunto con successo')),
         );
 
         // Torno alla schermata precedente
         Navigator.pop(context);
-
       } catch (e) {
         debugPrint("Errore durante l'aggiunta del libro: $e");
 
         if (!mounted) return;
 
         messenger.showSnackBar(
-          const SnackBar(
-            content: Text("Errore durante l'aggiunta del libro"),
-          ),
+          const SnackBar(content: Text("Errore durante l'aggiunta del libro")),
         );
       }
     }
+  }
+
+  // metodo per il caricamento delle immagini
+  Future<void> _pickMultipleImages() async {
+    final result = await ImagePicker().pickMultiImage();
+
+    if (result.isEmpty || !mounted) return;
+
+    setState(() {
+      _selectedImages = result.map((image) => File(image.path)).toList();
+    });
   }
 
   @override
@@ -154,10 +201,9 @@ class _AddBookViewState extends State<AddBookView> {
                     labelText: 'Titolo',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (value) =>
-                      value == null || value.trim().isEmpty
-                          ? 'campo obbligatorio'
-                          : null,
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'campo obbligatorio'
+                      : null,
                 ),
 
                 const SizedBox(height: 16),
@@ -169,10 +215,9 @@ class _AddBookViewState extends State<AddBookView> {
                     labelText: 'Autore',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (value) =>
-                      value == null || value.trim().isEmpty
-                          ? 'campo obbligatorio'
-                          : null,
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'campo obbligatorio'
+                      : null,
                 ),
 
                 const SizedBox(height: 16),
@@ -184,10 +229,9 @@ class _AddBookViewState extends State<AddBookView> {
                     labelText: 'Genere',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (value) =>
-                      value == null || value.trim().isEmpty
-                          ? 'campo obbligatorio'
-                          : null,
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'campo obbligatorio'
+                      : null,
                 ),
 
                 const SizedBox(height: 16),
@@ -235,9 +279,8 @@ class _AddBookViewState extends State<AddBookView> {
                       _selectedStatus = value;
                     });
                   },
-                  validator: (value) => value == null
-                      ? 'Seleziona uno stato di lettura'
-                      : null,
+                  validator: (value) =>
+                      value == null ? 'Seleziona uno stato di lettura' : null,
                 ),
 
                 const SizedBox(height: 16),
@@ -246,10 +289,7 @@ class _AddBookViewState extends State<AddBookView> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Valutazione',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    const Text('Valutazione', style: TextStyle(fontSize: 16)),
                     Row(
                       children: [
                         Expanded(
@@ -286,13 +326,35 @@ class _AddBookViewState extends State<AddBookView> {
 
                 const SizedBox(height: 20),
 
+                //* inserimento file copertina
+                ElevatedButton.icon(
+                  onPressed: _pickMultipleImages,
+                  label: const Text('Seleziona Immagini'),
+                  icon: Icon(Icons.photo_library),
+                ),
+                if (_selectedImages.isNotEmpty)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ..._selectedImages.map((file) {
+                        return Image.file(
+                          file,
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                        );
+                      }).toList(),
+                    ],
+                  ),
+
+                const SizedBox(height: 16),
+
                 //* Pulsante per continuare
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color.fromARGB(255, 72, 15, 129),
-                    foregroundColor:
-                        const Color.fromARGB(255, 223, 191, 117),
+                    backgroundColor: const Color.fromARGB(255, 72, 15, 129),
+                    foregroundColor: const Color.fromARGB(255, 223, 191, 117),
                   ),
                   onPressed: _submitForm,
                   icon: const Icon(Icons.arrow_forward),

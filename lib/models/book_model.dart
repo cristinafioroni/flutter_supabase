@@ -89,6 +89,7 @@ class Book {
   //* metodo per convertire un oggetto Book in una mappa per Supabase
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'user_id': userId,
       'title': title,
       'genre': genre,
@@ -97,6 +98,7 @@ class Book {
       'rating': rating,
       'comment': comment,
       'status': status.toDbValue(),
+      'created_at': createdAt.toIso8601String(),
     };
   }
 }
