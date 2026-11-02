@@ -21,6 +21,8 @@ class BookService {
     return (response as List).map((book) => Book.fromMap(book)).toList();
   }
 
+ 
+
   // aggiungi un nuovo libro per l'utente corrente
   Future<void> createBook(Book book) async {
     final response = await _client.from('books').insert(book.toMap()).select();
